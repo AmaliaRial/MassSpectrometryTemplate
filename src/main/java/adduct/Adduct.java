@@ -44,16 +44,6 @@ public class Adduct {
 
         return monoisotopicMass;
 
-        /*
-        if Adduct is single charge the formula is M = m/z +- adductMass. Charge is 1 so it does not affect
-
-        if Adduct is double or triple charged the formula is M = ( mz +- adductMass ) * charge
-
-        if adduct is a dimer or multimer the formula is M =  (mz +- adductMass) / numberOfMultimer
-
-        return monoisotopicMass;
-
-         */
     }
 
     /**
@@ -65,22 +55,31 @@ public class Adduct {
      * @return
      */
     public static Double getMZFromMonoisotopicMass(Double monoisotopicMass, String adduct) {
-        Double massToSearch;
+        Double mz;
 
+        int multimer = extractMultimer(adduct);
+        int charge = extractCharge(adduct);
 
-        // !! TODO METHOD
-        // !! TODO Create the necessary regex to obtain the multimer (number before the M) and the charge (number before the + or - (if no number, the charge is 1).
+        Double adductMass = AdductList.MAPMZPOSITIVEADDUCTS.get(adduct);
+        if (adductMass == null) {
+            adductMass = AdductList.MAPMZNEGATIVEADDUCTS.get(adduct);
+        }
 
-        /*
-        if Adduct is single charge the formula is m/z = M +- adductMass. Charge is 1 so it does not affect
+        if (adductMass == null) {
+            throw new IllegalArgumentException("Adduct not found: " + adduct);
+        }
+        if (charge == 1) {
+            // Single charge: Subtract the adduct mass
+            mz = monoisotopicMass + adductMass;
+        } else if (multimer > 1) {
+            // Dimer or multimer: Subtract the adduct mass and divide by multimer
+            mz = (monoisotopicMass*multimer) + adductMass ;
+        } else {
+            // Double or triple charge: Subtract the adduct mass and multiply by charge
+            mz = (monoisotopicMass/charge) + adductMass;
+        }
 
-        if Adduct is double or triple charged the formula is mz = M/charge +- adductMass
-
-        if adduct is a dimer or multimer the formula is mz = M * numberOfMultimer +- adductMass
-
-        return monoisotopicMass;
-         */
-        return null;
+        return mz;
     }
 
     /**
