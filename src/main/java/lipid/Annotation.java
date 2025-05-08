@@ -1,9 +1,9 @@
 package lipid;
 
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
+import adduct.Adduct;
+import adduct.AdductList;
+
+import java.util.*;
 
 /**
  * Class to represent the annotation over a lipid
@@ -14,7 +14,7 @@ public class Annotation {
     private final double mz;
     private final double intensity; // intensity of the most abundant peak in the groupedPeaks
     private final double rtMin;
-    private String adduct; // !!TODO The adduct will be detected based on the groupedSignals
+    private String adduct;
     private final Set<Peak> groupedSignals;
     private int score;
     private int totalScoresApplied;
@@ -41,8 +41,8 @@ public class Annotation {
         this.mz = mz;
         this.rtMin = retentionTime;
         this.intensity = intensity;
-        // !!TODO This set should be sorted according to help the program to deisotope the signals plus detect the adduct
-        this.groupedSignals = new TreeSet<>(groupedSignals);
+        this.groupedSignals = new TreeSet<>(Comparator.comparingDouble(Peak::getMz));
+        this.groupedSignals.addAll(groupedSignals);
         this.score = 0;
         this.totalScoresApplied = 0;
     }
@@ -83,15 +83,18 @@ public class Annotation {
         this.score = score;
     }
 
-    // !TODO Take into account that the score should be normalized between 0 and 1
     public void addScore(int delta) {
         this.score += delta;
         this.totalScoresApplied++;
     }
 
     public double getNormalizedScore() {
-        return (double) this.score / this.totalScoresApplied;
-    }
+        if (totalScoresApplied == 0) {
+            return 0.0;
+        }
+        double raw = (double) score / totalScoresApplied;
+        return Math.min(1.0, Math.max(0.0,raw));}
+
 
     @Override
     public boolean equals(Object o) {
@@ -114,5 +117,31 @@ public class Annotation {
                 lipid.getName(), mz, rtMin, adduct, intensity, score);
     }
 
-    // !!TODO Detect the adduct with an algorithm or with drools, up to the user.
+    // TENEMOS UN MONTON DE SEÑALES Y VEMOS A VER A CUAL DE LOS ADUCTOS DE LOS CUALES SABEMOS SU MASA SE APROXIMA MAS
+    // PARA ASOCIAR ESA SEÑAL A ESE ADUCTO.
+    public void detectAdduct(int ppmTolerance) {
+        if (groupedSignals.isEmpty()) {
+            this.adduct = null;
+            return;
+        }
+        Peak basePeak = groupedSignals.iterator().next();
+        for (Map<String, Double> map : List.of(
+                AdductList.MAPMZPOSITIVEADDUCTS,
+                AdductList.MAPMZNEGATIVEADDUCTS)) {
+
+            for (String candidate : map.keySet()) {
+                // calculamos masa monoisotópica según hipótesis
+                double mono = Adduct.getMonoisotopicMassFromMZ(basePeak.getMz(), candidate);
+                // ppm entre experimental (this.mz) y teórico
+                int ppm = Adduct.calculatePPMIncrement(this.mz, mono);
+                if (ppm <= ppmTolerance) {
+                    this.adduct = candidate;
+                    return;
+                }
+            }
+        }
+        // si no se encuentra nada:
+        this.adduct=null;
+    }
+
 }
