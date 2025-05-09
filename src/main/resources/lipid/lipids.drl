@@ -17,3 +17,12 @@ then
     // !! TODO ONLY FOR DEBUGGING
     System.out.println("Scored 1 for annotations: " + $a1 + " and " + $a2);
 end
+
+rule "RT positive - same type, same double bonds, more carbons"
+when
+    $a1 : /annotations [$rt1 : rtMin, $type : lipid.lipidType(), $carbons1 : lipid.carbonCount(), $db : lipid.doubleBondsCount()]
+    $a2 : /annotations [this != $a1, lipid.lipidType() == $type, lipid.doubleBondsCount() == $db, lipid.carbonCount() > $carbons1, rtMin > $rt1]
+then
+    $a1.addScore(1);
+    $a2.addScore(1);
+end
