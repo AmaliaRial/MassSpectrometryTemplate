@@ -14,6 +14,7 @@ public class Annotation {
     private final double mz;
     private final double intensity; // intensity of the most abundant peak in the groupedPeaks
     private final double rtMin;
+    private final IonizationMode ionizationMode;
     private String adduct;
     private final Set<Peak> groupedSignals;
     private int score;
@@ -24,9 +25,10 @@ public class Annotation {
      * @param mz
      * @param intensity
      * @param retentionTime
+     * @param ionizationMode
      */
-    public Annotation(Lipid lipid, double mz, double intensity, double retentionTime) {
-        this(lipid, mz, intensity, retentionTime, Collections.emptySet());
+    public Annotation(Lipid lipid, double mz, double intensity, double retentionTime, IonizationMode ionizationMode) {
+        this(lipid, mz, intensity, retentionTime, ionizationMode,Collections.emptySet());
     }
 
     /**
@@ -34,13 +36,15 @@ public class Annotation {
      * @param mz
      * @param intensity
      * @param retentionTime
+     * @param ionizationMode
      * @param groupedSignals
      */
-    public Annotation(Lipid lipid, double mz, double intensity, double retentionTime, Set<Peak> groupedSignals) {
+    public Annotation(Lipid lipid, double mz, double intensity, double retentionTime, IonizationMode ionizationMode, Set<Peak> groupedSignals) {
         this.lipid = lipid;
         this.mz = mz;
         this.rtMin = retentionTime;
         this.intensity = intensity;
+        this.ionizationMode = ionizationMode;
         this.groupedSignals = new TreeSet<>(Comparator.comparingDouble(Peak::getMz));
         this.groupedSignals.addAll(groupedSignals);
         this.score = 0;
@@ -70,6 +74,8 @@ public class Annotation {
     public double getIntensity() {
         return intensity;
     }
+
+    public IonizationMode getIonizationMode() { return  ionizationMode; }
 
     public Set<Peak> getGroupedSignals() {
         return Collections.unmodifiableSet(groupedSignals);

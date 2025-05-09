@@ -2,15 +2,11 @@ package lipid;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class AdductDetectionTest {
     // !!TODO For the adduct detection both regular algorithms or drools can be used as far the tests are passed.
@@ -32,7 +28,7 @@ public class AdductDetectionTest {
         double annotationMZ = 700.49999d;
         double annotationIntensity = 80000.0;
         double annotationRT = 6.5d;
-        Annotation annotation = new Annotation(lipid, annotationMZ, annotationIntensity, annotationRT, Set.of(mH, mNa));
+        Annotation annotation = new Annotation(lipid, annotationMZ, annotationIntensity, annotationRT, IoniationMode.POSITIVE, Set.of(mH, mNa));
 
 
         // Then we should call the algorithmic/knowledge system rules fired to detect the adduct and Set it!
@@ -48,7 +44,7 @@ public class AdductDetectionTest {
         Peak mhH2O = new Peak(682.4894, 70000.0);     // [M+H–H₂O]+, ~18.0106 Da less
 
         Lipid lipid = new Lipid(1, "PE 36:2", "C41H78NO8P", "PE", 36, 2);
-        Annotation annotation = new Annotation(lipid, mh.getMz(), mh.getIntensity(), 7.5d, Set.of(mh, mhH2O));
+        Annotation annotation = new Annotation(lipid, mh.getMz(), mh.getIntensity(), 7.5d, IoniationMode.POSITIVE, Set.of(mh, mhH2O));
 
 
 
@@ -65,7 +61,7 @@ public class AdductDetectionTest {
         Peak doublyCharged = new Peak(350.754, 85000.0);   // [M+2H]2+
 
         Lipid lipid = new Lipid(3, "TG 54:3", "C57H104O6", "TG", 54, 3);
-        Annotation annotation = new Annotation(lipid, singlyCharged.getMz(), singlyCharged.getIntensity(), 10d, Set.of(singlyCharged, doublyCharged));
+        Annotation annotation = new Annotation(lipid, singlyCharged.getMz(), singlyCharged.getIntensity(), 10d, IoniationMode.POSITIVE, Set.of(singlyCharged, doublyCharged));
 
         assertNotNull("[M+H]+ should be detected", annotation.getAdduct());
 
