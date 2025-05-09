@@ -43,7 +43,7 @@ rule "RT negative - different type, same carbons/double bonds, RT follows PG < P
 when
     $a1 : /annotations[ $type1 : lipid.lipidType, $carbons : lipid.carbonCount, $db : lipid.doubleBondsCount,  $rt1 : rtMin]
     $a2 : /annotations[ this != $a1, $type2 : lipid.lipidType(),lipid.carbonCount == $carbons, lipid.doubleBondsCount == $db, rtMin < $rt1 ]
-    eval( lipidTypeRank($type1) < lipidTypeRank($type2) )
+    eval( lipid.lipidTypeRank($type1) < lipid.lipidTypeRank($type2) )
 then
     $a1.addScore(1);
     $a2.addScore(1);
@@ -73,9 +73,9 @@ end
 //2.3
 rule "RT negative - different type, same carbons/double bonds, RT follows PG < PE < PI < PA < PS < PC"
 when
-    $a1 : /annotations[ $type1 : lipid.lipidType, $carbons : lipid.carbonCount, $db : lipid.doubleBondsCount,  $rt1 : rtMin]
-    $a2 : /annotations[ this != $a1, $type2 : lipid.lipidType(),lipid.carbonCount == $carbons, lipid.doubleBondsCount == $db, rtMin > $rt1 ]
-    eval( lipidTypeRank($type1) < lipidTypeRank($type2) )
+    $a1 : /annotations[ $type1 : lipid.lipidType(), $carbons : lipid.carbonCount, $db : lipid.doubleBondsCount,  $rt1 : rtMin]
+    $a2 : /annotations[ this != $a1, $type2 : lipid.lipidType(), lipid.carbonCount == $carbons, lipid.doubleBondsCount == $db, rtMin > $rt1 ]
+    eval( lipid.lipidTypeRank($type1) < lipid.lipidTypeRank($type2) )
 then
     $a1.addScore(-1);
     $a2.addScore(-1);
