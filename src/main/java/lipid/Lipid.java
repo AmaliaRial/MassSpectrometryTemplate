@@ -75,4 +75,17 @@ public class Lipid {
                 ", doubleBondCount=" + doubleBondsCount +
                 '}';
     }
+
+    public static int lipidTypeRank(String type) {
+        return switch (type) {
+            case "PG" -> 1;
+            case "PE" -> 2;
+            case "PI" -> 3;
+            case "PA" -> 4;
+            case "PS" -> 5;
+            case "PC" -> 6;
+            default -> 100;
+        };
+    }
+
 }
