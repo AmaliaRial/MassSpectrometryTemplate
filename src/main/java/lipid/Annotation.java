@@ -117,31 +117,57 @@ public class Annotation {
                 lipid.getName(), mz, rtMin, adduct, intensity, score);
     }
 
-    // TENEMOS UN MONTON DE SEÑALES Y VEMOS A VER A CUAL DE LOS ADUCTOS DE LOS CUALES SABEMOS SU MASA SE APROXIMA MAS
-    // PARA ASOCIAR ESA SEÑAL A ESE ADUCTO.
+    /**
+     * Automatically detects the most probable adduct comparing the difference in mass
+     * between the grouped peaks (groupedSignals) with the characteristic masses of the known adducts.
+     *
+     * @param ppmTolerance tolerance in parts per million to be able to consider a valid match
+     */
     public void detectAdduct(int ppmTolerance) {
-        if (groupedSignals.isEmpty()) {
+
+        // If there are less than two signals, no difference can be calculated → no adduct can be inferred
+        if (groupedSignals.size() < 2) {
             this.adduct = null;
             return;
         }
-        Peak basePeak = groupedSignals.iterator().next();
-        for (Map<String, Double> map : List.of(
-                AdductList.MAPMZPOSITIVEADDUCTS,
-                AdductList.MAPMZNEGATIVEADDUCTS)) {
 
-            for (String candidate : map.keySet()) {
-                // calculamos masa monoisotópica según hipótesis
-                double mono = Adduct.getMonoisotopicMassFromMZ(basePeak.getMz(), candidate);
-                // ppm entre experimental (this.mz) y teórico
-                int ppm = Adduct.calculatePPMIncrement(this.mz, mono);
-                if (ppm <= ppmTolerance) {
-                    this.adduct = candidate;
-                    return;
+        // We convert the set of signals into a list ordered by mass/charge (mz)
+        List<Peak> peaks = new ArrayList<>(groupedSignals);
+        peaks.sort(Comparator.comparingDouble(Peak::getMz)); // sorts the peaks by their m/z value
+
+        // We compare all possible combinations of two different peaks
+        for (int i = 0; i < peaks.size(); i++) {
+            for (int j = i + 1; j < peaks.size(); j++) {
+                Peak lower = peaks.get(i);           // peak with lower mz
+                Peak higher = peaks.get(j);          // peak with higher mz
+                double deltaMz = higher.getMz() - lower.getMz(); // difference in m/z
+
+                // Run through the maps of known positive and negative adducts
+                for (Map<String, Double> map : List.of(
+                        AdductList.MAPMZPOSITIVEADDUCTS,
+                        AdductList.MAPMZNEGATIVEADDUCTS)) {
+
+                    // For each adduct, we get its name and associated mass
+                    for (Map.Entry<String, Double> entry : map.entrySet()) {
+                        String candidate = entry.getKey();                  // adduct name
+                        double adductMassDiff = Math.abs(entry.getValue()); // difference in mass
+
+                        // We calculate the difference between deltaMz and the expected mass, in ppm
+                        int ppm = Adduct.calculatePPMIncrement(deltaMz, adductMassDiff);
+
+                        // If it is within the allowed tolerance, we consider it a match
+                        if (ppm <= ppmTolerance) {
+                            this.adduct = candidate; // assign the detected adduct
+                            return;
+                        }
+                    }
                 }
             }
         }
-        // si no se encuentra nada:
-        this.adduct=null;
+
+        // If no combination matches a known adduct, we set it to null
+        this.adduct = null;
     }
+
 
 }
