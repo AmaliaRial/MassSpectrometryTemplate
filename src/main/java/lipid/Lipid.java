@@ -77,15 +77,16 @@ public class Lipid {
     }
 
     public static int lipidTypeRank(String type) {
-        return switch (type) {
-            case "PG" -> 1;
-            case "PE" -> 2;
-            case "PI" -> 3;
-            case "PA" -> 4;
-            case "PS" -> 5;
-            case "PC" -> 6;
-            default -> 100;
-        };
+        switch (type) {
+            case "PG": return 1;
+            case "PE": return 2;
+            case "PI": return 3;
+            case "PA": return 4;
+            case "PS": return 5;
+            case "PC": return 6;
+            default: return 100;
+        }
     }
+
 
 }
