@@ -130,40 +130,47 @@ public class Annotation {
      * @param ppmTolerance tolerance in parts per million to be able to consider a valid match
      */
     public void detectAdduct(int ppmTolerance) {
-
-        // If there are less than two signals, no difference can be calculated → no adduct can be inferred
         if (groupedSignals.size() < 2) {
             this.adduct = null;
             return;
         }
 
-        // We convert the set of signals into a list ordered by mass/charge (mz)
         List<Peak> peaks = new ArrayList<>(groupedSignals);
-        peaks.sort(Comparator.comparingDouble(Peak::getMz)); // sorts the peaks by their m/z value
+        peaks.sort(Comparator.comparingDouble(Peak::getMz)); // order by m/z
 
-        // We compare all possible combinations of two different peaks
+        // combines both maps of adducts
+        Map<String, Double> adducts = new LinkedHashMap<>();
+        if (ionizationMode == IonizationMode.POSITIVE) {
+            adducts.putAll(AdductList.MAPMZPOSITIVEADDUCTS);
+        } else {
+            adducts.putAll(AdductList.MAPMZNEGATIVEADDUCTS);
+        }
+
+        // By default we assume that the adduct with the lowest m/z is the main one
+        Peak basePeak = peaks.get(0);
+
+        String bestMatch = null;
+
         for (int i = 0; i < peaks.size(); i++) {
             for (int j = i + 1; j < peaks.size(); j++) {
-                Peak lower = peaks.get(i);           // peak with lower mz
-                Peak higher = peaks.get(j);          // peak with higher mz
-                double deltaMz = higher.getMz() - lower.getMz(); // difference in m/z
+                Peak p1 = peaks.get(i);
+                Peak p2 = peaks.get(j);
+                double deltaMz = Math.abs(p2.getMz() - p1.getMz());
 
-                // Run through the maps of known positive and negative adducts
-                for (Map<String, Double> map : List.of(
-                        AdductList.MAPMZPOSITIVEADDUCTS,
-                        AdductList.MAPMZNEGATIVEADDUCTS)) {
+                // We compare deltaMz against the difference between all pairs of known adducts
+                for (String a1 : adducts.keySet()) {
+                    for (String a2 : adducts.keySet()) {
+                        if (a1.equals(a2)) continue;
 
-                    // For each adduct, we get its name and associated mass
-                    for (Map.Entry<String, Double> entry : map.entrySet()) {
-                        String candidate = entry.getKey();                  // adduct name
-                        double adductMassDiff = Math.abs(entry.getValue()); // difference in mass
+                        double mass1 = Math.abs(adducts.get(a1));
+                        double mass2 = Math.abs(adducts.get(a2));
+                        double expectedDiff = Math.abs(mass1 - mass2);
 
-                        // We calculate the difference between deltaMz and the expected mass, in ppm
-                        int ppm = Adduct.calculatePPMIncrement(deltaMz, adductMassDiff);
-
-                        // If it is within the allowed tolerance, we consider it a match
+                        int ppm = Adduct.calculatePPMIncrement(deltaMz, expectedDiff);
                         if (ppm <= ppmTolerance) {
-                            this.adduct = candidate; // assign the detected adduct
+                            // We assume that the one with the lowest m/z is the one we will use as a reference
+                            bestMatch = p1.getMz() <= p2.getMz() ? a1 : a2;
+                            this.adduct = bestMatch;
                             return;
                         }
                     }
@@ -171,7 +178,7 @@ public class Annotation {
             }
         }
 
-        // If no combination matches a known adduct, we set it to null
+        // Si no se detectó nada
         this.adduct = null;
     }
 

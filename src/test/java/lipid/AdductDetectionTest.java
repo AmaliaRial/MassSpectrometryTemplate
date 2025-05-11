@@ -33,6 +33,7 @@ public class AdductDetectionTest {
 
         // Then we should call the algorithmic/knowledge system rules fired to detect the adduct and Set it!
         //
+        annotation.detectAdduct(10);
         assertNotNull("[M+H]+ should be detected", annotation.getAdduct());
         assertEquals( "Adduct inferred from lowest mz in group","[M+H]+", annotation.getAdduct());
     }
@@ -47,7 +48,7 @@ public class AdductDetectionTest {
         Annotation annotation = new Annotation(lipid, mh.getMz(), mh.getIntensity(), 7.5d, IonizationMode.POSITIVE, Set.of(mh, mhH2O));
 
 
-
+        annotation.detectAdduct(10);
         assertNotNull("[M+H]+ should be detected", annotation.getAdduct());
 
         assertEquals( "Adduct inferred from lowest mz in group","[M+H]+", annotation.getAdduct());
@@ -62,6 +63,8 @@ public class AdductDetectionTest {
 
         Lipid lipid = new Lipid(3, "TG 54:3", "C57H104O6", "TG", 54, 3);
         Annotation annotation = new Annotation(lipid, singlyCharged.getMz(), singlyCharged.getIntensity(), 10d, IonizationMode.POSITIVE, Set.of(singlyCharged, doublyCharged));
+
+        annotation.detectAdduct(10);
 
         assertNotNull("[M+H]+ should be detected", annotation.getAdduct());
 

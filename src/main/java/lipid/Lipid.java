@@ -9,6 +9,8 @@ public class Lipid {
     private final String lipidType; // !! OPTIONAL TODO -> TRANSFORM INTO AN ENUMERATION
     private final int carbonCount;
     private final int doubleBondsCount;
+    private final int lipidTypeRank;
+
 
 
     /**
@@ -26,7 +28,10 @@ public class Lipid {
         this.lipidType = lipidType;
         this.carbonCount = carbonCount;
         this.doubleBondsCount = doubleBondCount;
+        this.lipidTypeRank = calculateLipidTypeRank(lipidType);
     }
+
+
 
     public int getCompoundId() {
         return compoundId;
@@ -52,6 +57,11 @@ public class Lipid {
         return doubleBondsCount;
     }
 
+    public int getLipidTypeRank() {
+        return lipidTypeRank;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Lipid)) return false;
@@ -76,7 +86,7 @@ public class Lipid {
                 '}';
     }
 
-    public static int lipidTypeRank(String type) {
+    public static int calculateLipidTypeRank(String type) {
         switch (type) {
             case "PG": return 1;
             case "PE": return 2;
@@ -87,6 +97,5 @@ public class Lipid {
             default: return 100;
         }
     }
-
 
 }
