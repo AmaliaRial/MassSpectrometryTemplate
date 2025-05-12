@@ -85,5 +85,29 @@ public class AdductDetectionTest {
         assertEquals("[M+Na]+", a.getAdduct());
     }
 
+    @Test
+    public void shouldDetectPotassiumAdduct() {
+        // [M+H]+ at 700.500 → monoisotopic mass ≈ 700.500 − 1.007276 = 699.492724
+        // [M+K]+ mz = 699.492724 + 38.963158 ≈ 738.455882
+        Peak mH = new Peak(700.500, 100000.0);      // [M+H]+
+        Peak mK = new Peak(738.456,  80000.0);      // [M+K]+
+
+        Lipid lipid = new Lipid(1, "PC 34:1", "C42H82NO8P", "PC", 34, 1);
+        Annotation a = new Annotation(
+                lipid,
+                mK.getMz(),
+                mK.getIntensity(),
+                5.0,
+                IonizationMode.POSITIVE,
+                Set.of(mH, mK)
+        );
+
+        a.detectAdduct(10);
+
+        assertNotNull("[M+K]+ should be detected", a.getAdduct());
+        assertEquals("[M+K]+", a.getAdduct());
+    }
+
+
 
 }

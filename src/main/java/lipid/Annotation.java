@@ -123,6 +123,12 @@ public class Annotation {
                 lipid.getName(), mz, rtMin, adduct, intensity, score);
     }
 
+    /**
+     * Automatically detects the most probable adduct comparing the difference in mass
+     * between the grouped peaks (groupedSignals) with the characteristic masses of the known adducts.
+     *
+     * @param ppmTolerance tolerance in parts per million to be able to consider a valid match
+     */
     public void detectAdduct(int ppmTolerance) {
         // need at least two signals to infer anything
         if (groupedSignals.size() < 2) {
