@@ -26,21 +26,23 @@ public class Adduct {
         if (adductMass == null) {
             throw new IllegalArgumentException("Adduct not found: " + adduct);
         }
+        monoisotopicMass = ((mz * charge) + adductMass) / multimer;
 
-        //massToSearch = (mz + adductMass) * charge / multimer;
+        //massToSearch = (mz * charge) + adductMass / multimer;
         //return massToSearch;
-
+        /*
         // Handle the formulas based on charge and multimer
         if (charge == 1) {
             // Single charge: Subtract the adduct mass
-            monoisotopicMass = mz - adductMass;
+            //monoisotpoicmass = (mz * charge) + adductMass /multimer;
+            monoisotopicMass = mz + adductMass / multimer;
         } else if (multimer > 1) {
             // Dimer or multimer: Subtract the adduct mass and divide by multimer
-            monoisotopicMass = (mz - adductMass) / multimer;
+            monoisotopicMass = (mz * charge) + adductMass / multimer;
         } else {
             // Double or triple charge: Subtract the adduct mass and multiply by charge
-            monoisotopicMass = (mz - adductMass) * charge;
-        }
+            monoisotopicMass = (mz * charge) + adductMass;
+        }*/
 
         return monoisotopicMass;
 
@@ -68,6 +70,7 @@ public class Adduct {
         if (adductMass == null) {
             throw new IllegalArgumentException("Adduct not found: " + adduct);
         }
+        /*
         if (charge == 1) {
             // Single charge: Subtract the adduct mass
             mz = monoisotopicMass + adductMass;
@@ -77,7 +80,9 @@ public class Adduct {
         } else {
             // Double or triple charge: Subtract the adduct mass and multiply by charge
             mz = (monoisotopicMass/charge) + adductMass;
-        }
+        }*/
+
+        mz = ((monoisotopicMass * multimer) - adductMass) / charge;
 
         return mz;
     }
