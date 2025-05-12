@@ -73,17 +73,17 @@ public class AdductDetectionTest {
 
     @Test
     public void shouldDetectNaAdduct() {
-        Peak mH   = new Peak(700.500, 100000.0);
-        Peak mNa  = new Peak(350.754,  80000.0);   // [M+Na]+
+        Peak mH   = new Peak(700.500, 100000.0);         // [M+H]+
+        Peak mNa  = new Peak(722.482,  80000.0);         // [M+Na]+
         Lipid lipid = new Lipid(1, "PC 34:1", "C42H82NO8P", "PC", 34, 1);
+
         Annotation a = new Annotation(lipid, mNa.getMz(), mNa.getIntensity(), 5.0,
                 IonizationMode.POSITIVE, Set.of(mH, mNa));
         a.detectAdduct(10);
-        assertNotNull("[M+H]+ should be detected", a.getAdduct());
 
-        assertEquals("Adduct inferred from lowest mz in group", "[M+Na]+",  a.getAdduct());
-        System.out.println(a);
-        System.out.println(a.getAdduct());
+        assertNotNull("[M+Na]+ should be detected", a.getAdduct());
+        assertEquals("[M+Na]+", a.getAdduct());
     }
+
 
 }
