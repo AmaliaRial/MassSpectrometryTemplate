@@ -99,7 +99,7 @@ public class Annotation {
             return 0.0;
         }
         double raw = (double) score / totalScoresApplied;
-        return Math.min(1.0, Math.max(0.0,raw));}
+        return Math.min(1.0, Math.max(-1,raw));}
 
 
     @Override
