@@ -5,7 +5,7 @@ unit LipidScoreUnit;
 // TODO Include here rules and queries to fulfill the practice requirements
 
 // Function to compare lipid type priority: PG < PE < PI < PA < PS << PC
-function int compareLipidType(String a, String b) {
+/*function int compareLipidType(String a, String b) {
     String[] order = {"PG", "PE", "PI", "PA", "PS", "PC"};
     int indexA = -1;
     int indexB = -1;
@@ -21,7 +21,7 @@ function int compareLipidType(String a, String b) {
     if (order[indexA].equals("PC") && order[indexB].equals("PS")) return 2;
 
     return Integer.compare(indexA, indexB);
-}
+}*/
 
 // This is one example of rules that only prints the factorial combination of all pairs eliminating the A-A combination.
 // !! TODO This rule does not include the lipid type, you shall add it.
@@ -61,16 +61,28 @@ then
 end
 
 
-rule "Score 1: RT increases across lipid types if carbon count and DB is equal"
+rule "RT positive - different type, same double bonds, same carbons, RT follows PG < PE < PI < PA < PS < PC"
 when
-    $a1: /annotations[$rt1: rtMin,$lt1: lipid.getLipidType(),$db: lipid.getDoubleBondsCount(),$carbons: lipid.getCarbonCount()]
-    $a2: /annotations[this != $a1,$rt2: rtMin,$lt2: lipid.getLipidType(),lipid.getDoubleBondsCount() == $db,lipid.getCarbonCount() == $carbons,compareLipidType($lt1, $lt2) < 0,$rt2 > $rt1]
+    $a1 : /annotations [
+        $carbons1 : lipid.getCarbonCount(),
+        $db1 : lipid.getDoubleBondsCount(),
+        $rt1 : rtMin,
+        $l1 : lipid
+    ]
+    $a2 : /annotations [
+        this != $a1,
+        lipid.getCarbonCount() == $carbons1,
+        lipid.getDoubleBondsCount() == $db1,
+        $rt1 > rtMin,
+        $l2 : lipid
+    ]
+    eval($l1.getLipidTypeRank() > $l2.getLipidTypeRank())
 then
+    System.out.println("estoy usando la rule 3");
     $a1.addScore(1);
     $a2.addScore(1);
     System.out.println("Scored 1 for annotations: " + $a1 + " and " + $a2);
 end
-
 // !! TODO NEXT RULE: Negative evidence. If the RT follows the opposite order than the previous one, then the addScore should be -1.
 
 
@@ -104,105 +116,15 @@ then
 end
 
 
-rule "Score -1: RT decreases across lipid types (against expected hierarchy)"
-salience 10
-when
-    $a1: /annotations[$rt1: rtMin,$lt1: lipid.getLipidType(),$db: lipid.getDoubleBondsCount(),$carbons: lipid.getCarbonCount()]
-    $a2: /annotations[
-        this != $a1,
-        $rt2: rtMin,
-        $lt2: lipid.getLipidType(),
-        lipid.getDoubleBondsCount() == $db,
-        lipid.getCarbonCount() == $carbons,
-        eval(compareLipidType($lt1, $lt2) < 0),
-        eval($rt2 < $rt1)
-    ]
-then
-    $a1.addScore(-1);
-    $a2.addScore(-1);
-    System.out.println("Scored -1 for annotation: " + $a2);
-end
-
-/*
-package lipid;
-
-unit LipidScoreUnit;
-
-// TODO Include here rules and queries to fulfill the practice requirements
-
-// This is one example of rules that only prints the factorial combination of all pairs eliminating the A-A combination.
-rule "Score 1 for lipid pair with increasing RT and carbon count"
-when
-    $a1 : /annotations [$rt1 : rtMin, $carbonCount1 : lipid.getCarbonCount(), $doubleBondCount : lipid.getDoubleBondsCount()]
-    $a2 : /annotations [this!= $a1, lipid.getDoubleBondsCount() == $doubleBondCount, rtMin > $rt1, lipid.getCarbonCount() > $carbonCount1]
-then
-    // in this case, the only change is the addition of the score, but the fact does not change so we do not break the principle of refractoriness
-    $a1.addScore(1);
-    $a2.addScore(1);
-    // !! TODO ONLY FOR DEBUGGING
-    System.out.println("Scored 1 for annotations: " + $a1 + " and " + $a2);
-end
-
-//1.1
-rule "RT positive - same type, same double bonds, more carbons"
-when
-    $a1 : /annotations [$type : lipid.getLipidType(), $carbons1 : lipid.getCarbonCount(), $db : lipid.getDoubleBondsCount(), $rt1 : rtMin]
-    $a2 : /annotations [this != $a1, lipid.getLipidType() == $type, lipid.getCarbonCount() < $carbons1, lipid.getDoubleBondsCount() == $db, rtMin < $rt1]
-then
-    $a1.addScore(1);
-    $a2.addScore(1);
-end
-
-//1.2
-rule "RT positive - same type, less double bonds, same carbons"
-when
-    $a1 : /annotations [$type : lipid.getLipidType(), $carbons1 : lipid.getCarbonCount(), $db : lipid.getDoubleBondsCount(), $rt1 : rtMin]
-    $a2 : /annotations [this !=$a1, lipid.getLipidType() == $type, lipid.getCarbonCount() == $carbons1, lipid.getDoubleBondsCount() > $db, rtMin < $rt1]
-then
-    $a1.addScore(1);
-    $a2.addScore(1);
-end
-
-//1.3
-rule "RT positive - different type, same carbons/double bonds, RT follows PG < PE < PI < PA < PS < PC"
-when
-    $a1 : /annotations[$type1 : lipid.getLipidType(), $carbons : lipid.getCarbonCount(), $db : lipid.getDoubleBondsCount(), $rt1 : rtMin, $l1 : lipid]
-    $a2 : /annotations[this != $a1,$type2 : lipid.getLipidType(), lipid.getCarbonCount() == $carbons, lipid.getDoubleBondsCount() == $db, rtMin < $rt1, $l2 : lipid]
-    eval($l1.getLipidTypeRank() < $l2.getLipidTypeRank())
-then
-    $a1.addScore(1);
-    $a2.addScore(1);
-end
-
-
-//2.1
-rule "RT negative - same type, same double bonds, more carbons"
-when
-    $a1 : /annotations [$type : lipid.getLipidType(), $carbons1 : lipid.getCarbonCount(), $db : lipid.getDoubleBondsCount(), $rt1 : rtMin]
-    $a2 : /annotations [this != $a1, lipid.getLipidType() == $type, lipid.getCarbonCount() < $carbons1, lipid.getDoubleBondsCount() == $db, rtMin > $rt1]
-then
-    $a1.addScore(-1);
-    $a2.addScore(-1);
-end
-
-//2.2
-rule "RT negative - same type, less double bonds, same carbons"
-when
-    $a1 : /annotations [$type : lipid.getLipidType(), $carbons1 : lipid.getCarbonCount(), $db : lipid.getDoubleBondsCount(), $rt1 : rtMin]
-    $a2 : /annotations [this !=$a1, lipid.getLipidType() == $type, lipid.getCarbonCount() == $carbons1, lipid.getDoubleBondsCount() > $db, rtMin > $rt1]
-then
-    $a1.addScore(-1);
-    $a2.addScore(-1);
-end
-
-
-//2.3
 rule "RT negative - different type, same carbons/double bonds, RT follows PG < PE < PI < PA < PS < PC"
 when
-    $a1 : /annotations[$type1 : lipid.getLipidType(), $carbons : lipid.getCarbonCount(), $db : lipid.getDoubleBondsCount(), $rt1 : rtMin, $l1 : lipid]
-    $a2 : /annotations[this != $a1,$type2 : lipid.getLipidType(), lipid.getCarbonCount() == $carbons, lipid.getDoubleBondsCount() == $db, rtMin > $rt1, $l2 : lipid]
-eval($l1.getLipidTypeRank() < $l2.getLipidTypeRank())
+    $a1 : /annotations [$carbons1 : lipid.getCarbonCount(), $db1 : lipid.getDoubleBondsCount(), $rt1 : rtMin, $l1 : lipid]
+    $a2 : /annotations [this != $a1, lipid.getCarbonCount() == $carbons1, lipid.getDoubleBondsCount() == $db1, $rt1 < rtMin, $l2 : lipid]
+    eval($l1.getLipidTypeRank() > $l2.getLipidTypeRank())
 then
+    System.out.println("estoy usando la rule 6");
     $a1.addScore(-1);
     $a2.addScore(-1);
-end*/
+    System.out.println("Scored -1 for annotations: " + $a1 + " and " + $a2);
+
+end
